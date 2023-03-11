@@ -1,0 +1,14 @@
+[Unit]
+Description=monitor-backend-services
+
+[Service]
+WorkingDirectory=/opt/monitor
+ExecStart=/opt/monitor/monitor.sh &
+Type=simple
+User=root
+Group=root
+Restart=on-failure
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target

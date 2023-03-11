@@ -1,0 +1,18 @@
+---
+- hosts: backend
+  serial: 5
+  gather_facts: no
+
+  tasks:
+  - name: service-a.service disable and systemctl daemon-reload
+    raw: systemctl disable --now service-a; \
+         systemctl daemon-reload;
+
+  - name: remove service-a configs and dirs
+    raw: rm -rf /opt/service-a; \
+         rm -f /etc/systemd/system/service-a.service; \
+         rm -rf /etc/ssl/nginx/service-a; \
+         rm -r /etc/nginx/backend.d/service-a.example.com.conf;
+
+  - name: nginx service restart
+    raw: systemctl restart nginx;

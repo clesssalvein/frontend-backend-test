@@ -1,0 +1,14 @@
+---
+- hosts: backend
+  serial: 5
+  gather_facts: no
+
+  tasks:
+  - name: remove service-b configs and dirs
+    raw: rm -rf /usr/share/nginx/html/service-b.example.com; \
+         rm -rf /etc/ssl/nginx/service-b; \
+         rm -r /etc/nginx/backend.d/service-b.example.com.conf;
+         rm -r /etc/nginx/conf.d/service-b.conf;
+
+  - name: nginx service restart
+    raw: systemctl restart nginx;

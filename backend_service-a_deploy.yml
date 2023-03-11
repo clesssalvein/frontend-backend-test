@@ -1,0 +1,71 @@
+---
+- hosts: backend
+  serial: 5
+  gather_facts: no
+
+  tasks:
+  - name: set hostname
+    raw: hostnamectl set-hostname {{ inventory_hostname }};
+
+  - name: timezone and time sync
+    raw: rm -f /etc/localtime; \
+         cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
+         #dnf install -y chrony; \
+         #systemctl enable --now chronyd;
+
+  - name: utils installation
+    raw: dnf install -y python3 python3-devel python3-pip python3-virtualenv;
+
+  - name: python3 venv create
+    raw: python3 -m venv /opt/service-a/venv;
+
+  - name: copy requirements.txt with necessary python modules to install it in the VENV
+    copy:
+      src: 'backend/service-a/requirements.txt'
+      dest: '/opt/service-a/requirements.txt'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: install python3 venv requirements
+    pip:
+      requirements: /opt/service-a/requirements.txt
+      virtualenv: /opt/service-a/venv
+      virtualenv_python: python3
+
+  - name: copy app.py
+    copy:
+      src: 'backend/service-a/app.py'
+      dest: '/opt/service-a/app.py'
+      owner: root
+      group: root
+      mode: 0655
+
+  - name: copy service-a.service
+    copy:
+      src: 'backend/service-a/service-a.service'
+      dest: '/etc/systemd/system/service-a.service'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: systemctl daemon-reload and service-a.service enable
+    raw: systemctl daemon-reload; \
+         systemctl enable --now service-a.service;
+
+  - name: ssl certs creating for nginx service-a config
+    raw: mkdir -p /etc/ssl/nginx/service-a; \
+         openssl req -new -x509 -days 3650 -nodes -out /etc/ssl/nginx/service-a/public.pem \
+           -keyout /etc/ssl/nginx/service-a/private.key \
+           -subj '/C=RU/ST=TMB/L=TMB/O=Global Security/OU=IT Department/CN=service-a.example.com';
+
+  - name: copy nginx config service-a.example.com.conf
+    copy:
+      src: 'backend/service-a/service-a.example.com.conf'
+      dest: '/etc/nginx/backend.d/service-a.example.com.conf'
+      owner: nginx
+      group: nginx
+      mode: 0644
+
+  - name: nginx service restart
+    raw: systemctl restart nginx;

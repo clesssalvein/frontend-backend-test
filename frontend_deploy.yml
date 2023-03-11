@@ -1,0 +1,169 @@
+---
+- hosts: frontend
+  serial: 5
+  gather_facts: no
+
+  tasks:
+  - name: set hostname
+    raw: hostnamectl set-hostname {{ inventory_hostname }};
+
+  - name: timezone and time sync
+    raw: rm -f /etc/localtime; \
+         cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
+         #dnf install -y chrony; \
+         #systemctl enable --now chronyd;
+
+  - name: utils installation
+    raw: dnf install -y nano wget mc tar net-tools nmap openssl git openssh-server; \
+
+  - name: sshd enable
+    raw: systemctl enable --now sshd;
+
+  - name: firewall installation and configure
+    raw: dnf install -y iptables-services; \
+         systemctl enable --now iptables; \
+
+         iptables -F -t filter; \
+         iptables -P INPUT ACCEPT; \
+         iptables -A INPUT -p icmp -j ACCEPT; \
+         iptables -A INPUT -i lo -j ACCEPT; \
+         iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT; \
+         iptables -A INPUT -p tcp -m multiport --dport 80,443 -j ACCEPT; \
+         iptables -A INPUT -p tcp --dport 22 -j ACCEPT; \
+         iptables -P INPUT DROP; \
+         iptables -P FORWARD DROP; \
+         iptables -P OUTPUT ACCEPT; \
+         service iptables save;
+
+  - name: check if /etc/ssl/nginx/dhparam.pem exists
+    stat:
+      path: /etc/ssl/nginx/dhparam.pem
+    register: dhparam_file_stat_result
+
+  - name: ssl for nginx dir create and ssl-dh cert generate
+    raw: mkdir /etc/ssl/nginx/; \
+         openssl dhparam -out /etc/ssl/nginx/dhparam.pem 2048;
+    when: not dhparam_file_stat_result.stat.exists
+
+  - name: nginx installation and enable
+    raw: dnf install -y nginx; \
+         systemctl enable nginx --now;
+
+  - name: check if backend config directory /etc/nginx/backend.d exists
+    stat:
+      path: /etc/nginx/backend.d
+    register: backend_config_dir_stat_result
+
+  - name: create backend config directory /etc/nginx/backend.d if it doesnt exist
+    raw: mkdir -p /etc/nginx/backend.d;
+    when: not backend_config_dir_stat_result.stat.exists
+
+  - name: check if nginx config exists
+    stat:
+      path: /etc/nginx/nginx.conf
+    register: nginx_config_stat_result
+
+  - name: backup nginx.conf to nginx.conf.ORIG
+    raw: mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.ORIG;
+    when: nginx_config_stat_result.stat.exists
+
+  - name: copy custom nginx.conf
+    copy:
+      src: 'frontend/nginx.conf'
+      dest: '/etc/nginx/nginx.conf'
+      owner: nginx
+      group: nginx
+      mode: 0644
+
+  - name: check if http.conf config exists
+    stat:
+      path: /etc/nginx/conf.d/http.conf
+    register: http_conf_stat_result
+
+  - name: backup http.conf to http.conf.ORIG
+    raw: mv /etc/nginx/conf.d/http.conf /etc/nginx/conf.d/http.conf.ORIG;
+    when: http_conf_stat_result.stat.exists
+
+  - name: copy custom http.conf
+    copy:
+      src: 'frontend/http.conf'
+      dest: '/etc/nginx/conf.d/http.conf'
+      owner: nginx
+      group: nginx
+      mode: 0644
+
+  - name: check if monitor dir /opt/monitor exists
+    stat:
+      path: /opt/monitor
+    register: monitor_dir_stat_result
+
+  - name: create monitor dir /opt/monitor if it doesnt exist
+    raw: mkdir -p /opt/monitor;
+    when: not monitor_dir_stat_result.stat.exists
+
+  - name: check if monitor.sh exists
+    stat:
+      path: /opt/monitor/monitor.sh
+    register: monitor_script_stat_result
+
+  - name: backup monitor.sh to monitor.sh.ORIG
+    raw: mv /opt/monitor/monitor.sh /opt/monitor/monitor.sh.ORIG;
+    when: monitor_script_stat_result.stat.exists
+
+  - name: copy custom monitor.sh
+    copy:
+      src: 'frontend/monitor.sh'
+      dest: '/opt/monitor/monitor.sh'
+      owner: root
+      group: root
+      mode: 0655
+
+  - name: check if monitor.service file exists
+    stat:
+      path: /etc/systemd/system/monitor.service
+    register: monitor_service_file_stat_result
+
+  - name: backup monitor.service to monitor.service.ORIG
+    raw: mv /etc/systemd/system/monitor.service /etc/systemd/system/monitor.service.ORIG;
+    when: monitor_service_file_stat_result.stat.exists
+
+  - name: copy custom monitor.service
+    copy:
+      src: 'frontend/monitor.service'
+      dest: '/etc/systemd/system/monitor.service'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: systemctl daemon-reload and monitor.service enable
+    raw: systemctl daemon-reload; \
+         systemctl enable --now monitor;
+
+  - name: check if nano /opt/backup-script/backup.sh file exists
+    stat:
+      path: /opt/backup-script/backup.sh
+    register: backup_script_file_stat_result
+
+  - name: backup backup.sh to backup.sh.ORIG
+    raw: mv /opt/backup-script/backup.sh /opt/backup-script/backup.sh.ORIG;
+    when: backup_script_file_stat_result.stat.exists
+
+  - name: create dir for backup.sh
+    raw: mkdir -p /opt/backup-script
+
+  - name: copy custom backup.sh
+    copy:
+      src: 'frontend/backup.sh'
+      dest: '/opt/backup-script/backup.sh'
+      owner: root
+      group: root
+      mode: 0655
+
+  - name: check if a cron job backup.sh exists
+    shell: crontab -l | grep "/opt/backup-script/backup.sh";
+    ignore_errors: true
+    register: cron_job_backup_result
+
+  - name: add cron job backup.sh if it doesnt exist
+    raw: crontab -l | { cat; echo "0 1 * * * /opt/backup-script/backup.sh"; } | crontab -;
+    when: cron_job_backup_result.stdout == ""

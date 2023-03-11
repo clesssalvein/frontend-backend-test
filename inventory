@@ -1,0 +1,15 @@
+[frontend]
+frontend-backend ansible_host=127.0.0.1 ansible_host_ip=127.0.0.1
+
+[frontend:vars]
+ansible_connection=ssh
+ansible_user=root
+ansible_ssh_pass=Pass#1
+
+[backend]
+frontend-backend ansible_host=127.0.0.1 ansible_host_ip=127.0.0.1
+
+[backend:vars]
+ansible_connection=ssh
+ansible_user=root
+ansible_ssh_pass=Pass#1

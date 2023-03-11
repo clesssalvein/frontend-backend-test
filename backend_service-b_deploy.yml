@@ -1,0 +1,57 @@
+---
+- hosts: backend
+  serial: 5
+  gather_facts: no
+
+  tasks:
+  - name: set hostname
+    raw: hostnamectl set-hostname {{ inventory_hostname }};
+
+  - name: timezone and time sync
+    raw: rm -f /etc/localtime; \
+         cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
+         #dnf install -y chrony; \
+         #systemctl enable --now chronyd;
+
+  - name: php-fpm service installation and enable
+    raw: dnf install -y epel-release; \
+         dnf install -y http://rpms.remirepo.net/enterprise/remi-release-8.rpm; \
+         dnf module install -y php:remi-7.3; \
+         dnf install -y php-fpm; \
+         systemctl enable --now php-fpm;
+
+  - name: copy service-b app php dir
+    copy:
+      src: 'backend/service-b/service-b.example.com'
+      dest: '/usr/share/nginx/html/'
+      owner: nginx
+      group: nginx
+      mode: 0644
+
+#  - name: create directory for service-b
+#    raw: mkdir -p /usr/share/nginx/html/service-b.example.com;
+
+  - name: copy service-b.conf
+    copy:
+      src: 'backend/service-b/service-b.conf'
+      dest: '/etc/nginx/conf.d/service-b.conf'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: ssl certs creating for nginx service-b config
+    raw: mkdir -p /etc/ssl/nginx/service-b; \
+         openssl req -new -x509 -days 3650 -nodes -out /etc/ssl/nginx/service-b/public.pem \
+           -keyout /etc/ssl/nginx/service-b/private.key \
+           -subj '/C=RU/ST=TMB/L=TMB/O=Global Security/OU=IT Department/CN=service-b.example.com';
+
+  - name: copy nginx config service-b.example.com.conf
+    copy:
+      src: 'backend/service-b/service-b.example.com.conf'
+      dest: '/etc/nginx/backend.d/service-b.example.com.conf'
+      owner: nginx
+      group: nginx
+      mode: 0644
+
+  - name: nginx service restart
+    raw: systemctl restart nginx;

@@ -1,0 +1,11 @@
+[Unit]
+Description=service-a
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/service-a
+ExecStart=/opt/service-a/venv/bin/python /opt/service-a/app.py --serve-in-foreground
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
