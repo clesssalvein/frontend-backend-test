@@ -70,7 +70,7 @@ add address=192.168.111.140 name=service-b.example.com
 ```
 
 
-## Начальная настройка хоста
+## Начальная настройка хоста Frontend-Backend
 
 Установка необходимых компонентов для запуска развертывания системы
 
@@ -84,6 +84,8 @@ dnf install -y git ansible-core openssh-server
 systemctl enable --now sshd
 ```
 
+Теперь можно подключиться к хосту по протоколу SSH
+
 Клонируем репозиторий системы в локальную директорию
 
 ```
@@ -95,6 +97,9 @@ git clone https://github.com/clesssalvein/frontend-backend-test.git
 ```
 cd frontend-backend-test
 ```
+
+
+### Развертывание Frontend
 
 Правим необходимые переменные в следующих файлах: **inventory**,**/opt/backup-script/backup.sh**,**/opt/monitor/monitor.sh**.
 
@@ -119,11 +124,16 @@ iptables -L -v -n
 - Скрипт бэкапирования **/opt/backup-script/backup.sh**. Добавленно задание CRON на запуск скрипта раз в сутки. Скрипт бэкапирует указанные в его переменных директории раз в сутки, удаляя при этом старые бэкапы, оставляя только новые за определенный в скрипте период. Также бэкапирование инициируется в соответствующую директорию каждое первое число каждого месяца. Подробнее о работе бэкапирования можно узнать из комментариев скрипта.
 
 
+### Развертывание Backend-службы Service-A
+
 Инициируем запуск развертывания Backend-службы Service-A
 
 ```
 ansible-playbook -v -i inventory backend_service-a_deploy.yml
 ```
+
+
+### Развертывание Backend-службы Service-B
 
 Инициируем запуск развертывания Backend-службы Service-B
 
