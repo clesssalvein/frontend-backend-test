@@ -1,6 +1,6 @@
 ---
 - hosts: frontend
-  serial: 5
+  serial: 1
   gather_facts: no
 
   tasks:
@@ -26,6 +26,23 @@
     copy:
       src: 'frontend/00-network.conf'
       dest: '/etc/sysctl.d/00-network.conf'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: check if /etc/security/limits.d/nginx.conf file exists
+    stat:
+      path: /etc/security/limits.d/nginx.conf
+    register: limit_nginx_user_file_stat_result
+
+  - name: backup /etc/security/limits.d/nginx.conf to /etc/security/limits.d/nginx.conf.ORIG
+    raw: mv /etc/security/limits.d/nginx.conf /etc/security/limits.d/nginx.conf.ORIG;
+    when: limit_nginx_user_file_stat_result.stat.exists
+
+  - name: copy custom /etc/security/limits.d/nginx.conf
+    copy:
+      src: 'frontend/limits.d/nginx.conf'
+      dest: '/etc/security/limits.d/nginx.conf'
       owner: root
       group: root
       mode: 0644
