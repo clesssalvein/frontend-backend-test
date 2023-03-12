@@ -13,9 +13,29 @@
          #dnf install -y chrony; \
          #systemctl enable --now chronyd;
 
+  - name: check if 00-network.conf file exists
+    stat:
+      path: /etc/sysctl.d/00-network.conf
+    register: network_conf_file_stat_result
+
+  - name: backup 00-network.conf to 00-network.conf.ORIG
+    raw: mv /etc/sysctl.d/00-network.conf /etc/sysctl.d/00-network.conf.ORIG;
+    when: network_conf_file_stat_result.stat.exists
+
+  - name: copy custom 00-network.conf
+    copy:
+      src: 'frontend/00-network.conf'
+      dest: '/etc/sysctl.d/00-network.conf'
+      owner: root
+      group: root
+      mode: 0644
+
   - name: utils installation
     raw: dnf install -y nano wget mc tar net-tools nmap openssl git openssh-server; \
-
+      
+  - name: load new linux kernel network parameters
+    raw: sysctl --load=/etc/sysctl.d/00-network.conf;
+  
   - name: sshd enable
     raw: systemctl enable --now sshd;
 
