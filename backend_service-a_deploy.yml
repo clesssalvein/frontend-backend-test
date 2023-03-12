@@ -4,15 +4,6 @@
   gather_facts: no
 
   tasks:
-  - name: set hostname
-    raw: hostnamectl set-hostname {{ inventory_hostname }};
-
-  - name: timezone and time sync
-    raw: rm -f /etc/localtime; \
-         cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
-         #dnf install -y chrony; \
-         #systemctl enable --now chronyd;
-
   - name: utils installation
     raw: dnf install -y python3 python3-devel python3-pip python3-virtualenv;
 
