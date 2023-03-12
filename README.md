@@ -157,7 +157,7 @@ ansible-playbook -v -i inventory backend_service-a_remove.yml
 ansible-playbook -v -i inventory backend_service-b_deploy.yml
 ```
 
-В результате, мы получим службу приложения PHP при помощи службы Nginx, работающую на порте 8081/tcp. Служба Frontend Nginx проксирует порт 443/tcp на порт данной службы. Данные приложения и службы размещены по следующим путям **/usr/share/nginx/html/service-b.example.com**,**/etc/nginx/conf.d/service-b.conf**. Получить доступ к приложению можно по ссылке:
+В результате, мы получим службу приложения PHP, работающую на базе службы Nginx и на порте 8081/tcp. Служба Frontend Nginx проксирует порт 443/tcp на порт данной службы. Данные приложения и службы размещены по следующим путям **/usr/share/nginx/html/service-b.example.com**,**/etc/nginx/conf.d/service-b.conf**. Получить доступ к приложению можно по ссылке:
 
 ```
 https://service-b.example.com/
