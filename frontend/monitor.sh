@@ -25,10 +25,10 @@ monitorBackendLogDir="${monitorBaseDir}/backendLog"
 # dir for backends' actual status
 monitorBackendStatusDir="${monitorBaseDir}/backendStatus"
 
-# when alarm about status triggered, here you can see whether alarm was triggered or not
+# when alarm status is triggered, here you can see whether alarm was triggered or not
 monitorBackendAlarmAcceptedDir="${monitorBaseDir}/backendAlarmAccepted"
 
-# telegram bot's info to send notifications
+# telegram bot's info to send the notifications
 telegramBotId="bot4***1:A***Y"
 telegramChatId="2***3"
 
@@ -55,7 +55,7 @@ do
   # debug
   echo "${nginxBackendConfig}";
 
-  # backend name
+  # getting backend name (domain name of the service) from the nginx backend config
   backendDomainName=$(cat "${nginxBackendConfigsDirPath}/${nginxBackendConfig}" \
     | awk '/server_name/ {print $2}' \
     | sed 's/;//');
@@ -85,7 +85,7 @@ do
     mkdir -p ${monitorBackendLogDir}/${backendDomainName}
   fi
 
-  # getting backend listen port status
+  # getting backend service's listened port status
   backendAppPortStatus=$(nmap ${backendAppHost} -p${backendAppPort} \
     | awk -v backendAppPort="${backendAppPort}" '$0~backendAppPort {print $0}' \
     | awk '/open/ {print $2}')
@@ -98,7 +98,7 @@ do
   backendAlarmAcceptedFile="${monitorBackendAlarmAcceptedDir}/${backendDomainName}/backendAlarmAccepted.txt"
   backendLogFile="${monitorBackendLogDir}/${backendDomainName}/backendLog.txt"
 
-  # create necessary files
+  # create empty necessary files (in case they don't exist)
   if ! test -f ${backendStatusFile}; then
     touch ${backendStatusFile}
   fi
@@ -111,10 +111,10 @@ do
     touch ${backendLogFile}
   fi
 
-  # if backend service port is open
+  # if backend service's port is open
   if [ "${backendAppPortStatus}" == "open" ]; then
     if [ "$(cat ${backendStatusFile})" != "1" ]; then
-      # backend status ON
+      # write backend status ON
       echo "1" > ${backendStatusFile}
 
       # debug
@@ -123,41 +123,42 @@ do
       # backend log write
       echo "${dateTime} Backend \"${backendDomainName}\" on port \"${backendAppPort}\" became OK!" >> ${backendLogFile}
 
-      # telegram notify
+      # sending telegram notify
       curl --request POST https://api.telegram.org/${telegramBotId}/sendMessage?chat_id=${telegramChatId} \
         --data "text=${dateTime} Backend \"${backendDomainName}\" on port \"${backendAppPort}\" became OK!"
     fi
 
+    # if alarmAccepted status is ON or empty
     if [ "$(cat ${backendAlarmAcceptedFile})" != "0" ]; then
-      # backend alarmAccepted OFF
+      # write backend alarmAccepted OFF
       echo "0" > ${backendAlarmAcceptedFile}
     fi
   fi
 
-  # if backend service port is closed
+  # if backend service's port is closed
   if [ "${backendAppPortStatus}" != "open" ]; then
     # if alarm is NOT accepted
     if [ "$(cat ${backendAlarmAcceptedFile})" != "1" ]; then
       # debug
       echo "Alarm! Backend \"${backendDomainName}\" on port \"${backendAppPort}\" Failed!";
 
-      # backend status ON
+      # write backend status ON
       echo "0" > ${backendStatusFile}
 
-      # backend alarmAccepted ON
+      # write backend alarmAccepted ON
       echo "1" > ${backendAlarmAcceptedFile}
 
       # backend log write
       echo "${dateTime} Alarm! Backend \"${backendDomainName}\" on port \"${backendAppPort}\" Failed!" >> ${backendLogFile}
 
-      # telegram notify
+      # sending telegram notify
       curl --request POST https://api.telegram.org/${telegramBotId}/sendMessage?chat_id=${telegramChatId} \
         --data "text=${dateTime} Alarm! Backend \"${backendDomainName}\" on port \"${backendAppPort}\" Failed!"
     fi
   fi
 done
 
-# makeup
+# console output makeup
 echo "";
 echo "---";
 echo "";
