@@ -10,8 +10,8 @@
   - name: timezone and time sync
     raw: rm -f /etc/localtime; \
          cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
-         #dnf install -y chrony; \
-         #systemctl enable --now chronyd;
+         dnf install -y chrony; \
+         systemctl enable --now chronyd;
 
   - name: check if 00-network.conf file exists
     stat:
