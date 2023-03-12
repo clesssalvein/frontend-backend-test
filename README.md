@@ -136,6 +136,18 @@ iptables -L -v -n
 ansible-playbook -v -i inventory backend_service-a_deploy.yml
 ```
 
+В результате, мы получим службу приложения Python Flask API, работающую на порте 8080/tcp. Служба Frontend Nginx проксирует порт 443/tcp на порт данной службы. Данные приложения размещены по пути **/opt/service-a/**. Получить доступ к приложению можно по ссылке:
+
+```
+https://service-a.example.com/
+```
+
+Удаление Backend-службы Service-A
+
+```
+ansible-playbook -v -i inventory backend_service-a_remove.yml
+```
+
 
 ### Развертывание Backend-службы Service-B
 
@@ -143,4 +155,16 @@ ansible-playbook -v -i inventory backend_service-a_deploy.yml
 
 ```
 ansible-playbook -v -i inventory backend_service-b_deploy.yml
+```
+
+В результате, мы получим службу приложения PHP при помощи службы Nginx, работающую на порте 8081/tcp. Служба Frontend Nginx проксирует порт 443/tcp на порт данной службы. Данные приложения и службы размещены по следующим путям **/usr/share/nginx/html/service-b.example.com**,**/etc/nginx/conf.d/service-b.conf**. Получить доступ к приложению можно по ссылке:
+
+```
+https://service-b.example.com/
+```
+
+Удаление Backend-службы Service-B
+
+```
+ansible-playbook -v -i inventory backend_service-b_remove.yml
 ```
