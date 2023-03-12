@@ -1,6 +1,6 @@
 ---
 - hosts: backend
-  serial: 5
+  serial: 1
   gather_facts: no
 
   tasks:
