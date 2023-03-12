@@ -35,6 +35,8 @@
 
 **frontend/nginx.conf** - основная конфигурация Nginx
 
+**00-network.conf** - параметры ядра Linux для оптимизации сетевых запросов
+
 
 ## Backend
 
