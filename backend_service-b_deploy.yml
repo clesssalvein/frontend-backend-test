@@ -4,15 +4,6 @@
   gather_facts: no
 
   tasks:
-  - name: set hostname
-    raw: hostnamectl set-hostname {{ inventory_hostname }};
-
-  - name: timezone and time sync
-    raw: rm -f /etc/localtime; \
-         cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
-         #dnf install -y chrony; \
-         #systemctl enable --now chronyd;
-
   - name: php-fpm service installation and enable
     raw: dnf install -y epel-release; \
          dnf install -y http://rpms.remirepo.net/enterprise/remi-release-8.rpm; \
@@ -27,9 +18,6 @@
       owner: nginx
       group: nginx
       mode: 0644
-
-#  - name: create directory for service-b
-#    raw: mkdir -p /usr/share/nginx/html/service-b.example.com;
 
   - name: copy service-b.conf
     copy:
