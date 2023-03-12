@@ -21,7 +21,7 @@ dateTimeCurrent=`date +%Y-%m-%d_%H-%M-%S`
 leaveNewestDailyBackupsNumber="7"
 
 # dirs to backup
-# it's necessary to use full paths of the directories and ";" as delimiter
+# it's necessary to use full paths of the directories and ";" as a delimiter
 backupDirsList="/opt;/etc/nginx;/etc/systemd"
 
 
@@ -58,7 +58,7 @@ do
   if [ ${backupDailySuccess} -eq 0 ]; then
     # if backup dir is exist
     if [ -d ${backupBaseDir}/${dirWithPseudoPath}/daily/ ]; then
-      # removing old backups, leaving only newest last backups (check the var "leaveNewestDailyBackupsNumber")
+      # removing old backups, leaving only last newest backups (check the var "leaveNewestDailyBackupsNumber")
       cd ${backupBaseDir}/${dirWithPseudoPath}/daily/
       ls -lt \
         | sed /^total/d \
