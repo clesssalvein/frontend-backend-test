@@ -88,6 +88,12 @@ add address=192.168.111.140 name=service-b.example.com
 dnf install -y git ansible-core openssh-server
 ```
 
+Необходимо проверить что в конфигурации **/etc/ssh/sshd_config** присутствует следующий параметр для подключения к серверу с правами суперпользователя:
+
+```
+PermitRootLogin yes
+```
+
 Запуск службы SSHD
 
 ```
