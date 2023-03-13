@@ -96,6 +96,16 @@ PermitRootLogin yes
 ...
 ```
 
+Отключите selinux (если не планируете использовать правила безопасности)
+
+```
+sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+```
+
+```
+reboot
+```
+
 Запуск службы SSHD
 
 ```
