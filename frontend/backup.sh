@@ -63,7 +63,7 @@ do
       ls -lt \
         | sed /^total/d \
         | awk -v leaveNewestDailyBackupsNumber=${leaveNewestDailyBackupsNumber} 'FNR>leaveNewestDailyBackupsNumber {print $9}' \
-        | xargs rm -rf {};
+        | xargs rm -f {};
     fi
   fi
 
